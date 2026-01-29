@@ -35,7 +35,6 @@ namespace LegacyNetworking
 
         private void OnSceneLoaded(Scene arg0, LoadSceneMode arg1) {
             Network.Views.Clear();
-            Network.AllocateViews();
         }
 
         public void Disable() {

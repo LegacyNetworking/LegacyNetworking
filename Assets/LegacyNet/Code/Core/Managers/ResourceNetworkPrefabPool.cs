@@ -30,6 +30,7 @@ namespace LegacyNetworking
             }
             var instance = UnityEngine.Object.Instantiate(prefab, position, rotation);
             var view = instance.GetComponent<NetworkView>();
+            view.isInstantiated = true;
             view.instantiateKey = key;
             Network.AllocateView(view);
             return instance;

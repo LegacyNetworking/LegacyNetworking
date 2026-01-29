@@ -10,15 +10,14 @@ namespace LegacyNetworking {
             RiptideLogger.Initialize(Debug.Log, Debug.Log, Debug.LogWarning, Debug.LogError, false);
             localServer = new("LEGACYNET_SERVER");
             localClient = new("LEGACYNET_CLIENT");
-            NetworkMono.DontDestroyOnLoad(new GameObject("Network [Mono]",typeof(NetworkMono)));
-            AllocateViews();
+            NetworkMono.DontDestroyOnLoad(new GameObject("Network [Mono]", typeof(NetworkMono)));
 
             SceneManager = new LevelNetSceneManager();
             PrefabPool = new ResourceNetworkPrefabPool();
         }
         private static INetworkPrefabPool prefabPool;
         public static INetworkPrefabPool PrefabPool {
-            get => prefabPool;  set {
+            get => prefabPool; set {
                 prefabPool?.OnDisable();
                 prefabPool = value;
                 prefabPool?.OnEnable();
@@ -30,8 +29,16 @@ namespace LegacyNetworking {
                 sceneManager = value;
             }
         }
-        public static bool isServer => localServer.IsRunning;
-        public static bool isClient => localClient.IsConnected;
+        public static bool isServer {
+            get {
+                return localServer != null ? localServer.IsRunning : false;
+            }
+        }
+        public static bool isClient {
+            get {
+                return localClient != null ? localClient.IsConnected : false;
+            }
+        }
         public static Server localServer {
             get; private set;
         }
@@ -57,12 +64,6 @@ namespace LegacyNetworking {
         }
         public static bool NetConnect(string address, ushort maxConnectionAttempts = 5) {
             return localClient.Connect(address, maxConnectionAttempts, (byte)NetworkTags.Group);
-        }
-
-        public static void AllocateViews() {
-            foreach (var networkView in UnityEngine.Object.FindObjectsOfType<NetworkView>()) {
-                AllocateView(networkView);
-            }
         }
     }
 }

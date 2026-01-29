@@ -1,11 +1,14 @@
 using Riptide;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LegacyNetworking {
+    [DefaultExecutionOrder(-100)]
     public partial class NetworkView : MonoBehaviour {
         public object instantiateKey { get; internal set; }
         public int viewId { get; internal set; } = -1;
         public int owner { get; internal set; } = -1;
+        public bool isInstantiated { get; internal set; } = false;
         public bool isMine {
             get {
                 bool value = ownershipFlag.HasFlag(OwnershipFlag.Server) || owner < 0 && Network.isServer;
@@ -17,8 +20,9 @@ namespace LegacyNetworking {
         }
         public MessageSendMode reliability;
         public OwnershipFlag ownershipFlag;
-
         private void Awake() {
+            if (!isInstantiated)
+                Network.AllocateView(this);
             RegisterObservables();
         }
 
