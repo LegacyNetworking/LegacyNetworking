@@ -4,6 +4,7 @@ namespace LegacyNetworking
 {
     public interface IObservable
     {
-        public void OnSerializeView(Message stream, bool isWriting);
+        public void OnSerialize(Message stream);
+        public void OnDeserialize(Message stream);
     }
 }

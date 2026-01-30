@@ -19,7 +19,6 @@ namespace LegacyNetworking {
                 return value;
             }
         }
-        public MessageSendMode reliability;
         public OwnershipOption ownershipOption;
         private void Awake() {
             if (!isInstantiated)
@@ -35,7 +34,7 @@ namespace LegacyNetworking {
         private void HandleOwner() {
             if (!Network.isServer)
                 return;
-            if(Network.localServer.TryGetClient(owner, out var _))
+            if(Network.localServer.TryGetClient(owner, out var _) || Network.localServer.Clients.Length < 1)
                 return;
             TransferOwner(Network.localServer.Clients[0].Id);
         }

@@ -9,9 +9,10 @@ namespace LegacyNetworking
         [SerializeField] private Component[] _observables;
         public ObservableSearch observableSearch;
         public List<IObservable> observables = new();
+        public MessageSendMode channel = MessageSendMode.Unreliable;
         public void RegisterObservables() {
             if (observableSearch.HasFlag(ObservableSearch.Auto))
-                observables = GetComponents<IObservable>().ToList();
+                observables = GetComponentsInChildren<IObservable>(true).ToList();
             foreach (var observable in _observables) {
                 if (observable is not IObservable) {
                     Debug.Log($"{observable.GetType().FullName} DOES NOT IMPLEMENT IObservable INTERFACE", observable);
@@ -33,11 +34,14 @@ namespace LegacyNetworking
         private void SerializeView(bool isWriting) {
             var observedTemp = _observedMessage;
             if (isWriting) {
-                _observedMessage = Message.Create(reliability, NetworkMessages.StreamMessage);
+                _observedMessage = Message.Create(channel, NetworkMessages.StreamMessage);
                 _observedMessage.Add(viewId);
             }
             foreach (var observable in observables) {
-                observable.OnSerializeView(_observedMessage, isWriting);
+                if(isWriting)
+                    observable.OnSerialize(_observedMessage);
+                else
+                    observable.OnDeserialize(_observedMessage);
             }
             if (Network.isClient && isWriting && _observedMessage != observedTemp)
                 Network.Send(_observedMessage);
@@ -55,7 +59,7 @@ namespace LegacyNetworking
 
         [MessageHandler((ushort)NetworkMessages.StreamMessage)]
         internal static void OnStreamMessage_Client(Message received) {
-            var view = Network.Views[received.GetUShort()];
+            var view = Network.Views[(ushort)received.GetInt()];
             view._observedMessage = received;
             view.SerializeView(false);
         }

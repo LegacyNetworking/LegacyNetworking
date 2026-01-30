@@ -1,0 +1,16 @@
+{
+    "name": "LegacyNetworking.Extras",
+    "rootNamespace": "LegacyNetworking.Extras",
+    "references": [
+        "GUID:7ad212076ec581a4f841e604c1c0215d"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

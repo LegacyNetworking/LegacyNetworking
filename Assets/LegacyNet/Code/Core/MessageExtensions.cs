@@ -72,5 +72,15 @@ namespace Riptide
             return new Quaternion(message.GetFloat(), message.GetFloat(), message.GetFloat(), message.GetFloat());
         }
         #endregion
+
+        #region Messages
+        public static Message Add(this Message message, Message value) => message.AddMessage(value);
+        public static Message GetMessage(this Message message) {
+            var unreadBits = message.UnreadBits;
+            message.GetBits(message.UnreadBits, out ulong bitField);
+            Message data = Message.Create();
+            return data.AddBits(bitField, unreadBits);
+        }
+        #endregion
     }
 }

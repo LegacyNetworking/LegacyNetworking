@@ -11,10 +11,10 @@ namespace LegacyNetworking
         ChangeOwnerMessage,
         RequestOwnerMessage,
     }
-    public enum NetworkTargets : ushort {
-        Target = 0,
-        Others = 1,
-        All = 2,
-        Server = 3,
+    public enum NetworkTarget : byte {
+        All = 0,
+        Others,
+        Server,
+        Targeted,
     }
 }

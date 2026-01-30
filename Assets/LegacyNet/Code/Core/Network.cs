@@ -1,5 +1,6 @@
 using Riptide;
 using Riptide.Utils;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,12 +10,21 @@ namespace LegacyNetworking {
         public static void Start() {
             RiptideLogger.Initialize(Debug.Log, Debug.Log, Debug.LogWarning, Debug.LogError, false);
             localServer = new("LEGACYNET_SERVER");
+            localServer.ClientConnected += Server_ClientConnected;
             localClient = new("LEGACYNET_CLIENT");
             NetworkMono.DontDestroyOnLoad(new GameObject("Network [Mono]", typeof(NetworkMono)));
 
             SceneManager = new LevelNetSceneManager();
             PrefabPool = new ResourceNetworkPrefabPool();
         }
+
+        private static void Server_ClientConnected(object sender, ServerConnectedEventArgs e) {
+            var connection = e.Client.Id;
+            foreach(var message in bufferedMessages) {
+                localServer.Send(message, connection);
+            }
+        }
+
         private static INetworkPrefabPool prefabPool;
         public static INetworkPrefabPool PrefabPool {
             get => prefabPool; set {
@@ -70,8 +80,11 @@ namespace LegacyNetworking {
         public static bool NetConnect(string address, ushort maxConnectionAttempts = 5) {
             return localClient.Connect(address, maxConnectionAttempts);
         }
-
-        public static void SendToAll(Message message, short exceptPlayer = -1, bool asHost = false) {
+        public static List<Message> bufferedMessages = new();
+        /// <summary>
+        /// Send message from server to clients
+        /// </summary>
+        public static void SendToAll(Message message, short exceptPlayer = -1, bool asHost = false, bool buffered = false) {
             if (!isServer)
                 return;
             if (asHost) {
@@ -87,12 +100,19 @@ namespace LegacyNetworking {
                 else
                     localServer.SendToAll(message, (ushort)exceptPlayer);
             }
+            if(!bufferedMessages.Contains(message)) bufferedMessages.Add(message);
         }
+        /// <summary>
+        /// Send message from server to a client
+        /// </summary>
         public static void Send(Message message, ushort target) {
             if (!isServer)
                 return;
             localServer.Send(message, target);
         }
+        /// <summary>
+        /// Send message from client to server
+        /// </summary>
         public static void Send(Message message) {
             if(!isClient)
                 return;

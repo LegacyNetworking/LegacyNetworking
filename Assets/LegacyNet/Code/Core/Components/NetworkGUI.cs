@@ -1,6 +1,3 @@
-using LegacyNetworking;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Network = LegacyNetworking.Network;
 
@@ -17,5 +14,9 @@ public class NetworkGUI : MonoBehaviour
         _address = GUILayout.TextField(_address);
         _port = GUILayout.TextField(_port);
         GUILayout.EndHorizontal();
+        if(GUILayout.Button("Disconnect"))
+            Network.NetShutdown();
+        GUILayout.Box($"Is Server: {Network.isServer}");
+        GUILayout.Box($"Is Client: {Network.isClient}");
     }
 }

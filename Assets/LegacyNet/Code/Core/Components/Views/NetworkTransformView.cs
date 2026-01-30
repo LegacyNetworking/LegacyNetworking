@@ -5,8 +5,6 @@ namespace LegacyNetworking
 {
     public class NetworkTransformView : MonoBehaviour, IObservable
     {
-        public bool syncPosition = true;
-        public bool syncRotation = true;
         public bool syncScale = false;
         public float teleportDistance = 3;
         private Vector3 networkPosition;
@@ -14,34 +12,40 @@ namespace LegacyNetworking
         private Vector3 networkScale;
         private bool _isWriting;
 
+        void Awake() {
+            networkPosition = transform.position;
+            networkRotation = transform.rotation;
+            networkScale = transform.localScale;
+        }
+
         void Update() {
             if (_isWriting)
                 return;
-            if (syncPosition)
-                transform.position = networkPosition;
-            if (syncRotation)
-                transform.rotation = networkRotation;
+            transform.position = networkPosition;
+            transform.rotation = networkRotation;
             if (syncScale)
                 transform.localScale = networkScale;
         }
 
-        public virtual void OnSerializeView(Message stream, bool isWriting) {
-            _isWriting = isWriting;
-            if (_isWriting) {
-                if (syncPosition)
-                    stream.Add(transform.position);
-                if (syncRotation)
-                    stream.Add(transform.rotation);
+        public void OnSerialize(Message stream) {
+            stream.Add(transform.position);
+            stream.Add(transform.rotation);
+            if (syncScale)
+                stream.Add(transform.localScale);
+        }
+
+        public void OnDeserialize(Message stream) {
+            networkPosition = stream.GetVector3();
+            networkRotation = stream.GetQuaternion();
+            if (syncScale)
+                networkScale = stream.GetVector3();
+
+            if (Vector3.Distance(transform.position, networkPosition) > teleportDistance) {
+                transform.position = networkPosition;
+                transform.rotation = networkRotation;
                 if (syncScale)
-                    stream.Add(transform.localScale);
-            }
-            else {
-                if (syncPosition)
-                    networkPosition = stream.GetVector3();
-                if (syncRotation)
-                    networkRotation = stream.GetQuaternion();
-                if (syncScale)
-                    networkScale = stream.GetVector3();
+                    transform.localScale = networkScale;
+                return;
             }
         }
     }

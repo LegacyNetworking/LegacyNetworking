@@ -69,7 +69,7 @@ namespace LegacyNetworking
         }
 
         public void InstantiateToConnection(ushort connection, Message spawnMessage) {
-            Network.localServer.Send(spawnMessage,connection);
+            Network.Send(spawnMessage,connection);
         }
 
         public bool clientAuth = true;   
