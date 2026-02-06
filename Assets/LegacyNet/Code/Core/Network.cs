@@ -33,12 +33,14 @@ namespace LegacyNetworking {
                 prefabPool?.OnEnable();
             }
         }
+        public static GameObject Instantiate(object key, Vector3 position = default, Quaternion rotation = default) => PrefabPool.Instantiate(key, position, rotation);
         private static INetSceneManager sceneManager;
         public static INetSceneManager SceneManager {
             get => sceneManager; set {
                 sceneManager = value;
             }
         }
+        public static void LoadLevel(string key) => SceneManager.LoadLevel(key);
         public static bool isServer {
             get {
                 return localServer != null ? localServer.IsRunning : false;

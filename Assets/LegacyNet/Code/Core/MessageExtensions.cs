@@ -3,6 +3,8 @@
 // For additional information please see the included LICENSE.md file or view it on GitHub:
 // https://github.com/RiptideNetworking/Riptide/blob/main/LICENSE.md
 
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 
 namespace Riptide
@@ -74,13 +76,29 @@ namespace Riptide
         #endregion
 
         #region Messages
-        public static Message Add(this Message message, Message value) => message.AddMessage(value);
-        public static Message GetMessage(this Message message) {
-            var unreadBits = message.UnreadBits;
-            message.GetBits(message.UnreadBits, out ulong bitField);
-            Message data = Message.Create();
-            return data.AddBits(bitField, unreadBits);
+        public static Message Add(this Message message, object[] value) => message.Add(ToByteArray(value));
+        public static object[] GetObjectArray(this Message message) => FromByteArray<object[]>(message.GetBytes());
+
+        public static byte[] ToByteArray<T>(T obj) {
+            if (obj == null)
+                return null;
+            BinaryFormatter bf = new BinaryFormatter();
+            using (MemoryStream ms = new MemoryStream()) {
+                bf.Serialize(ms, obj);
+                return ms.ToArray();
+            }
         }
+
+        public static T FromByteArray<T>(byte[] data) {
+            if (data == null)
+                return default(T);
+            BinaryFormatter bf = new BinaryFormatter();
+            using (MemoryStream ms = new MemoryStream(data)) {
+                object obj = bf.Deserialize(ms);
+                return (T)obj;
+            }
+        }
+
         #endregion
     }
 }

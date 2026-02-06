@@ -8,18 +8,20 @@ using UnityEngine;
 
 namespace LegacyNetworking
 {
-    public delegate void RPCDelegate(short sender, Message data);
+    public delegate void RPCDelegate(RPCInfo rpc);
     public partial class NetworkView : MonoBehaviour
     {
-        public Dictionary<byte, RPCDelegate> RpcMethods { get; set; } = new();
+        private Dictionary<byte, RPCDelegate> RpcMethods { get; set; } = new();
         private byte nextRpcId = 0;
-        public void RegisterRPC(RPCDelegate method) {
+        public byte RegisterRPC(RPCDelegate method) {
             if (RpcMethods.ContainsValue(method)) {
                 Debug.LogWarning($"[NetworkView] RPC method {method.Method.Name} is already registered on NetworkView attached to GameObject {gameObject.name}");
-                return;
+                return GetRpcId(method);
             }
-            RpcMethods.Add(nextRpcId, method);
+            var id = nextRpcId;
+            RpcMethods.Add(id, method);
             nextRpcId += 1;
+            return id;
         }
         public byte GetRpcId(RPCDelegate method) => RpcMethods.FirstOrDefault(x => x.Value == method).Key;
         public void UnregisterRPC(RPCDelegate method) {
@@ -29,19 +31,56 @@ namespace LegacyNetworking
                 Debug.LogWarning($"[NetworkView] RPC method {method.Method.Name} is not registered on NetworkView attached to GameObject {gameObject.name}");
             }
         }
-        public void InvokeRPC(RPCDelegate method, NetworkTarget target, bool buffered, Message data, MessageSendMode channel) {
-            var rpcMessage = Message.Create(MessageSendMode.Reliable, NetworkMessages.RpcMessage);
-            RPCInfo info = new();
-            info.ViewId = GetRpcId(method);
-            info.RpcId = GetRpcId(method);
-            info.Target = target;
-            info.Buffered = buffered;
-            info.Data = data;
-            rpcMessage.Add(info);
-            Network.Send(rpcMessage);
+        public void SendRPC(byte rpcId, NetworkTarget target, short playerTarget = -1, bool buffered = false, MessageSendMode channel = MessageSendMode.Unreliable, params object[] args) {
+            var message = Message.Create(MessageSendMode.Reliable, NetworkMessages.RpcMessage);
+            RPCMessage rpcMessage = new();
+            rpcMessage.Info = new() {
+                Sender = (ushort)Network.localPlayer,
+                Data = args
+            };
+            rpcMessage.ViewId = viewId;
+            rpcMessage.RpcId = rpcId;
+            rpcMessage.Target = target;
+            rpcMessage.PlayerTarget = playerTarget;
+            rpcMessage.Buffered = buffered;            
+            message.Add(rpcMessage);
+            Network.Send(message);
+        }
+
+        [MessageHandler((ushort)NetworkMessages.RpcMessage)]
+        public static void Server_Rpc(ushort sender, Message received) {
+            var cache = Message.Create().AddMessage(received);
+            var message = cache.GetSerializable<RPCMessage>();
+            switch (message.Target) {
+                case NetworkTarget.All | NetworkTarget.Others:
+                    bool others = message.Target == NetworkTarget.Others;
+                    foreach (var client in Network.localServer.Clients) {
+                        if (others)
+                            Network.SendToAll(received, (short)client.Id);
+                        else
+                            Network.SendToAll(received);
+                    }
+                    break;
+                case NetworkTarget.Targeted:
+                    Network.Send(received, (ushort)message.PlayerTarget);
+                    break;
+                case NetworkTarget.Server:
+                    HandleRpc(message);
+                    break;
+            }
+        }
+
+        [MessageHandler((ushort)NetworkMessages.RpcMessage)]
+        public static void Client_Rpc(Message received) {
+            HandleRpc(received.GetSerializable<RPCMessage>());
+        }
+
+        private static void HandleRpc(RPCMessage rpcMessage) {
+            var view = Network.Views[(ushort)rpcMessage.ViewId];
+            view.RpcMethods[rpcMessage.RpcId].Invoke(rpcMessage.Info);
         }
         /*
-        public void InvokeRPC(RPCDelegate method, short target, bool buffered, Message data, MessageSendMode channel) {
+        public void SendRPC(RPCDelegate method, short target, bool buffered, Message data, MessageSendMode channel) {
             var rpcMessage = Message.Create(MessageSendMode.Reliable, NetworkMessages.RpcMessage);
             RPCInfo info = new();
             info.ViewId = GetRpcId(method);
@@ -52,43 +91,5 @@ namespace LegacyNetworking
             rpcMessage.Add(info);
             Network.Send(rpcMessage);
         }*/
-    }
-
-    internal struct RPCInfo : IMessageSerializable {
-        public int ViewId {
-            get; set;
-        }
-        public byte RpcId {
-            get; set;
-        } 
-        public NetworkTarget Target {
-            get; set;
-        }
-        public short Player {
-            get; set;
-        }
-        public bool Buffered {
-            get; set;
-        }
-        public Message Data {
-            get; set;
-        }
-        public void Deserialize(Message message) {
-            ViewId = message.GetInt();
-            RpcId = message.GetByte();
-            Target = (NetworkTarget)message.GetByte();
-            Player = message.GetShort();
-            Buffered = message.GetBool();
-            Data = message.GetMessage();
-        }
-
-        public void Serialize(Message message) {
-            message.Add(ViewId);
-            message.Add(RpcId);
-            message.Add((byte)Target);
-            message.Add(Player);
-            message.Add(Buffered);
-            message.Add(Data);
-        }
     }
 }

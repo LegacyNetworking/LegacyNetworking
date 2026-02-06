@@ -327,6 +327,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+--- !u!1 &767862316
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 767862317}
+  m_Layer: 0
+  m_Name: Spawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &767862317
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 767862316}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 2, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &894137558 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 70818061874954766, guid: 447fcecd6f229a741b40c5f588c16a9d, type: 3}
@@ -698,11 +729,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b3bc8c788bd9b545a8c130dde2b3fba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  NetworkView: {fileID: 1295703241}
   balls:
   - {fileID: 894137558}
   - {fileID: 1936957468}
   - {fileID: 120636761}
   - {fileID: 1002481090}
+  ballKey: MovingBall
+  spawn: {fileID: 767862317}
 --- !u!114 &1295703241
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -715,10 +749,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9dc45f8f4bb1fd94594c1159548cab34, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  reliability: 0
   ownershipOption: 0
   _observables: []
   observableSearch: 0
+  channel: 0
 --- !u!1001 &1530487157
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -972,3 +1006,4 @@ SceneRoots:
   - {fileID: 721841607}
   - {fileID: 635556662}
   - {fileID: 1231004543}
+  - {fileID: 767862317}
